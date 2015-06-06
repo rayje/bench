@@ -18,13 +18,11 @@ type Config struct {
 func main() {
 	config := getConfig()
 	requestor := NewRequestor(config)
-	results, err := requestor.MakeRequest()
-	if err != nil {
+	if results, err := requestor.MakeRequest(); err != nil {
 		fmt.Println(err)
-		return
+	} else {
+		report(results)
 	}
-
-	report(results)
 }
 
 func getConfig() *Config {
@@ -46,39 +44,39 @@ func getConfig() *Config {
 }
 
 func report(results []Result) {
-	calc := NewMetrics(results)
-	calc.Sort()
+	metric := NewMetrics(results)
+	metric.Sort()
 
-	fmt.Println(strings.Repeat("=", 30))
-	fmt.Println("Requests:", calc.Total)
+	fmt.Println(strings.Repeat("-", 30))
+	fmt.Println("Requests:", metric.Total)
+	if metric.Errors > 0 {
+		fmt.Println("Errors:", metric.Errors)
+	}
 
 	fmt.Println("Latencies:")
-	printDuration("Total", calc.TotalRtt)
+	printDuration("Total", metric.TotalRtt)
 
-	printDuration("mean", time.Duration(calc.Mean))
-	printDuration("std", time.Duration(calc.StdDev()))
-	printDuration("min", calc.Min)
-	printDuration("max", calc.Max)
+	if len(results) > 1 {
+		printDuration("mean", time.Duration(metric.Mean))
+		printDuration("std", time.Duration(metric.StdDev()))
+		printDuration("min", metric.Min)
+		printDuration("max", metric.Max)
+		printPercentiles(metric)
+	}
 
-	printPercentiles(calc)
-
-	fmt.Println(strings.Repeat("=", 30))
+	fmt.Println(strings.Repeat("-", 30))
 }
 
 func printDuration(lbl string, duration time.Duration) {
 	fmt.Printf("\t%s:\t%s\n", lbl, duration)
 }
 
-func printPercentiles(calc Metrics) {
-	_25m := calc.GetPercentile(0.25)
-	_75m := calc.GetPercentile(0.75)
-	_95m := calc.GetPercentile(0.95)
-	_99m := calc.GetPercentile(0.99)
-	_999m := calc.GetPercentile(0.999)
+func printPercentiles(metric *Metrics) {
+	_95m := metric.GetPercentile(0.95)
+	_99m := metric.GetPercentile(0.99)
+	_999m := metric.GetPercentile(0.999)
 
 	fmt.Println("Percentiles:")
-	printDuration("0.25", _25m)
-	printDuration("0.75", _75m)
 	printDuration("0.95", _95m)
 	printDuration("0.99", _99m)
 	printDuration("0.999", _999m)

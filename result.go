@@ -9,8 +9,6 @@ type Result struct {
 	Code      uint16
 	Timestamp time.Time
 	Duration  time.Duration
-	BytesOut  uint64
-	BytesIn   uint64
 	Error     string
 }
 

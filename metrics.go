@@ -13,12 +13,14 @@ type Metrics struct {
 	TotalRtt time.Duration
 	Mean     float64
 	Total    float64
+	Errors   int
 }
 
-func NewMetrics(results []Result) Metrics {
+func NewMetrics(results []Result) *Metrics {
 	totalRtt := time.Duration(0)
 	min := time.Hour
 	max := time.Duration(0)
+	errors := 0
 
 	for _, result := range results {
 		totalRtt += result.Duration
@@ -30,21 +32,24 @@ func NewMetrics(results []Result) Metrics {
 		if result.Duration < min {
 			min = result.Duration
 		}
+
+		if result.Error != "" {
+			errors += 1
+		}
 	}
 
 	total := float64(len(results))
 	mean := float64(totalRtt) / total
 
-	metric := Metrics{
+	return &Metrics{
 		Results:  results,
 		Min:      min,
 		Max:      max,
 		TotalRtt: totalRtt,
 		Mean:     mean,
 		Total:    total,
+		Errors:   errors,
 	}
-
-	return metric
 }
 
 func (c *Metrics) Sort() {
