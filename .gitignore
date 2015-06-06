@@ -1,0 +1,8 @@
+.DS_Store
+pkg
+bench
+cover.out
+*.test
+dist
+.vagrant/
+main
